@@ -1,57 +1,75 @@
 # Task 2 Brief: Authentication Module
 
 ## Context
-Task 2 of 8 for Licai Buddy MVP. Task 1 completed: Next.js project initialized, Prisma schema created.
+Task 2 of 8 for Licai Buddy MVP. Task 1 completed: Next.js project initialized with Prisma schema.
 
 ## Your Requirements (read this first)
 
 ```typescript
-// From plan: docs/superpowers/plans/2026-08-23-mvp-feature.md - Task 2
-
-Create these files:
-- src/lib/auth.ts - JWT utilities, bcrypt hashing
-- src/lib/invite-code.ts - Invite code generation/validation
-- src/app/api/auth/register/route.ts
-- src/app/api/auth/login/route.ts
-- src/app/api/auth/logout/route.ts
-- src/app/api/auth/refresh/route.ts
-- src/middleware.ts - Route protection
-- src/app/(auth)/login/page.tsx
-- src/app/(auth)/register/page.tsx
-- __tests__/auth.test.ts
-
-KEY REQUIREMENTS:
-- Password hashed with bcrypt (salt rounds >= 10)
-- JWT Access Token: 24h expiry
-- JWT Refresh Token: 7d expiry
-- Login lockout: 5 failed attempts → 15 min lock
-- Invite code: 7 days validity, single-use
-- All API responses: { success, data, message } or { success, error }
-- Zod validation on all inputs
+// From docs/prd.md - 2.7 用户认证（P0）
+// Features:
+// - Invite-only registration (7-day validity, single-use)
+// - Email/password login with JWT
+// - Password reset via email
+// - Admin invitation code management
+// - Login protection (5 failures → 15 min lockout)
+// - Account balance computed dynamically (NOT stored)
 ```
 
-## Global Constraints
-- TypeScript strict mode
-- No hardcoded secrets
-- All passwords bcrypt hashed
-- JWT tokens httpOnly cookies in production
-- Error messages don't reveal whether email exists
+## Files to Create/Modify
 
-## Interfaces Consumed
-- `src/lib/prisma.ts` from Task 1
+### 1. Authentication Utilities
+- `src/lib/auth.ts` - bcrypt hashing, JWT sign/verify
+- `src/lib/invitation.ts` - invitation code generation/validation
+- `src/lib/session.ts` - session management
 
-## Interfaces Produced
-- Auth context for all subsequent tasks
-- JWT token helpers
-- Invite code management
+### 2. API Routes
+- `src/app/api/auth/register/route.ts` - POST /api/auth/register
+- `src/app/api/auth/login/route.ts` - POST /api/auth/login
+- `src/app/api/auth/logout/route.ts` - POST /api/auth/logout
+- `src/app/api/auth/reset-password/route.ts` - POST /api/auth/reset-password
+- `src/app/api/admin/invitations/route.ts` - GET/POST /api/admin/invitations
 
-## Report File
-Write completion report to: `C:/Users/Administrator/Documents/Licai-Buddy/.superpowers/sdd/2026-08-23-mvp-feature/task-2-report.md`
+### 3. Types
+- `src/types/auth.ts` - User, InvitationCode, JWT types
 
 ## Success Criteria
-- Register with valid invite code works
-- Login with correct credentials works
-- Login lockout after 5 failures works
-- JWT token generation and verification works
-- Invite code expires after 7 days
-- All tests pass
+- [ ] User can register with valid invitation code
+- [ ] User can login with email/password
+- [ ] JWT tokens issued (Access: 24h, Refresh: 7d)
+- [ ] Login locked after 5 consecutive failures (15 min)
+- [ ] Invitation codes expire after 7 days
+- [ ] Invitation codes are single-use
+- [ ] All API routes return proper error responses
+- [ ] Jest tests pass (>80% coverage)
+
+## Key Implementation Notes
+
+1. **Password hashing**: Use bcryptjs with salt rounds >= 10
+2. **JWT signing**: Use jsonwebtoken with secret from env
+3. **Login lockout**: Store failed attempts and lock timestamp in User model
+4. **Balance computation**: Do NOT store balance in DB; compute via SQL SUM queries
+5. **Error handling**: Return `{ success: false, error: "message" }` format
+
+## Prisma Models Already Defined
+- User (id, email, password, role, invitedBy, loginAttempts, lockedAt)
+- InvitationCode (id, code, createdBy, expiresAt, usedBy)
+
+## Testing Requirements
+Write Jest tests for:
+- Registration with valid/invalid invitation code
+- Login with correct/incorrect credentials
+- Login lockout after 5 failures
+- Token generation and verification
+- Invitation code expiration
+
+## Instructions
+1. Read this brief
+2. Implement all files listed above
+3. Run tests: `npx jest --passWithNoTests`
+4. Commit changes
+5. Push to GitHub
+6. Close task when done
+
+## Next Steps After Completion
+Task 3: Transaction Module (unified bookkeeping with keywords, repeating rules)
