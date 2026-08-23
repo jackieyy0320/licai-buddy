@@ -20,9 +20,16 @@
   - Commit: `e8d06c2`
   - GitHub: https://github.com/jackieyy0320/licai-buddy
 
-- [ ] **Task 2: Authentication Module** 🔄 Ready to execute
+- [x] **Design Phase: Figma Design Guide** ✅ Created
+  - Document: `docs/figma-design-guide.md` (15KB, comprehensive)
+  - 5 MVP pages specified with detailed layouts
+  - Component library specifications
+  - Color, typography, spacing systems defined
+
+- [ ] **Task 2: Authentication Module** ⏸️ Waiting for design
   - Brief: `.superpowers/sdd/2026-08-23-mvp-feature/task-2-brief.md`
   - Branch: `task/2-authentication`
+  - **Status:** 等待 Figma 设计完成后开始
 
 - [ ] Task 3: Transaction Module
 - [ ] Task 4: Account Module
@@ -31,7 +38,23 @@
 - [ ] Task 7: Layout & Navigation
 - [ ] Task 8: Integration Tests
 
+## Workflow Update
+
+### Current Phase: Design (Phase 2)
+```
+Phase 1: 需求确认 ✅
+Phase 2: 设计阶段 ⏳ (当前)
+Phase 3: 开发阶段 ⏸️ (等待设计完成)
+```
+
+### Next Steps
+1. 用户在 Figma 中打开 `docs/figma-design-guide.md`
+2. 按照指南创建 5 个 MVP 页面
+3. 设计评审通过后
+4. 继续 Task 2-8 开发
+
 ## Rulings Log
 
-- Task 1: Completed by subagent (2533s)
-- Task 2: Brief created, waiting for execution
+- Task 1: Completed by subagent (2533s + 3717s)
+- Design: Comprehensive guide created with all specifications
+- Blocked: Task 2-8 waiting for Figma design completion
