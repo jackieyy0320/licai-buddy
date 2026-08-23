@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  role           String   @default("user")
+  invitedBy      String?
+  loginAttempts  Int      @default(0)
+  lockedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  invitedByUser  User?    @relation("InvitedBy", fields: [invitedBy], references: [id], onDelete: SetNull)
+  invitedUsers   User[]   @relation("InvitedBy")
+  invitationsCreated  InvitationCode[] @relation("InvitationCreator")
+  invitationsUsed     InvitationCode[] @relation("InvitationInvitee")
+  accounts       Account[]
+  categories     Category[]
+  transactions   Transaction[]
+  keywords       Keyword[]
+  inventories    Inventory[]
+  investments    Investment[]
+  investmentRecords InvestmentRecord[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model InvitationCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  createdBy String
+  expiresAt DateTime
+  usedBy    String?
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  creator  User @relation("InvitationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  invitee  User? @relation("InvitationInvitee", fields: [usedBy], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@index([createdBy])
+  @@index([expiresAt])
+}
+
+model Account {
+  id                 String   @id @default(uuid())
+  userId             String
+  name               String
+  type               String   @default("cash")
+  icon               String?
+  keywords           String?  @default("[]")
+  creditCardBillDay  Int?
+  creditCardPayDay   Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([userId, type])
+}
+
+model Category {
+  id         String   @id @default(uuid())
+  userId     String
+  name       String
+  type       String   @default("expense")
+  icon       String?
+  color      String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, sortOrder])
+}
+
+model Keyword {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  keywordTransactions KeywordTransaction[]
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, name])
+}
+
+model Transaction {
+  id                 String   @id @default(uuid())
+  userId             String
+  accountId          String
+  categoryId         String?
+  type               String   @default("expense")
+  amount             Decimal
+  date               DateTime
+  note               String?
+  keywords           String?  @default("[]")
+  isRepeating        Boolean  @default(false)
+  repeatPattern      String?
+  repeatEndDate      DateTime?
+  repeatCount        Int?
+  parentTransactionId String?
+  toAccountId        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category        Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  parentTransaction Transaction?  @relation("RepeatingTransactions", fields: [parentTransactionId], references: [id], onDelete: SetNull)
+  repeatingTransactions Transaction[] @relation("RepeatingTransactions")
+  keywordTransactions KeywordTransaction[]
+
+  @@index([userId])
+  @@index([userId, accountId])
+  @@index([userId, date])
+  @@index([userId, categoryId])
+}
+
+model KeywordTransaction {
+  keywordId    String
+  transactionId String
+  createdAt    DateTime @default(now())
+
+  keyword    Keyword    @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@id([keywordId, transactionId])
+  @@index([transactionId])
+}
+
+model Inventory {
+  id                   String   @id @default(uuid())
+  userId               String
+  name                 String
+  quantity             Int      @default(0)
+  price                Decimal
+  purchaseDate         DateTime
+  keywords             String?  @default("[]")
+  category             String?
+  note                 String?
+  lowStockThreshold    Int      @default(1)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  priceHistories       InventoryPriceHistory[]
+  user                 User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, name])
+}
+
+model InventoryPriceHistory {
+  id           String   @id @default(uuid())
+  inventoryId  String
+  price        Decimal
+  purchaseDate DateTime
+  quantity     Int
+  createdAt    DateTime @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId, purchaseDate])
+}
+
+model Investment {
+  id             String   @id @default(uuid())
+  userId         String
+  name           String
+  type           String   @default("other")
+  principal      Decimal
+  currentValue   Decimal
+  purchaseDate   DateTime
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  records InvestmentRecord[]
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, type])
+}
+
+model InvestmentRecord {
+  id             String   @id @default(uuid())
+  investmentId   String
+  userId         String
+  type           String
+  amount         Decimal
+  date           DateTime
+  note           String?
+  createdAt      DateTime @default(now())
+
+  investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([investmentId])
+  @@index([userId])
+  @@index([userId, date])
+}
